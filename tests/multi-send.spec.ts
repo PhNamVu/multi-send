@@ -1,33 +1,37 @@
-import { TokenProgramService } from '@coin98/solana-support-library';
+import { sendTransaction, sendTransaction2, TokenProgramService } from '@coin98/solana-support-library';
 import {
-  SolanaConfigService,
+  SolanaConfigService, TestAccountService,
 
 } from '@coin98/solana-support-library/config';
-import * as anchor from "@project-serum/anchor";
-import { Program } from '@project-serum/anchor';
 
+import { createTransferInstruction } from '@solana/spl-token';
  
 
 import {
 
-  Connection, Keypair
+  TransactionMessage, Connection, Keypair, AddressLookupTableProgram, Transaction, PublicKey
+
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
-import { MultiSend } from "../target/types/multi_send";
+import { printAddressLookupTable, sendTransactionV0 } from './util';
 
 describe("multi-send", () => {
   // Configure the client to use the local cluster.
   // anchor.setProvider(anchor.AnchorProvider.env());
-  const program = anchor.workspace.TokenContract as Program<MultiSend>;
   const connection = new Connection('http://localhost:8899', 'confirmed')
   let defaultAccount: Keypair;
+  let testAccount1: Keypair
+  let testAccount2: Keypair
 
-    // Generate a random keypair that will represent our token
-    const mintKey: anchor.web3.Keypair = anchor.web3.Keypair.generate();
+  // Generate a random keypair that will represent our token
+  const mintKey  = Keypair.generate();
+
+   
   
-
   before(async () => {
     defaultAccount = await SolanaConfigService.getDefaultAccount()
+    testAccount1 = await TestAccountService.getAccount(0)
+    testAccount2 = await TestAccountService.getAccount(1)
   });
  
   it("Mint token!", async () => {
@@ -57,23 +61,39 @@ describe("multi-send", () => {
     
   });
 
-  // it("Single send", async () => {
-    
+  it("Create and extend Address Lookup Table", async () => {
+   
+    const [lookupTableInst, lookupTableAddress] = AddressLookupTableProgram.createLookupTable({
+      authority: defaultAccount.publicKey,
+      payer: defaultAccount.publicKey,
+      recentSlot: await connection.getSlot('finalized')
 
-  //   // Wallet that will receive the token 
-  //   const toWallet: anchor.web3.Keypair = anchor.web3.Keypair.generate();
-  //    // The ATA for a token on the to wallet (but might not exist yet)
-  //   const transferToken = await TokenProgramService.transfer(
-  //     connection,
-  //     defaultAccount,
-  //     mintKey.publicKey,
-  //     toWallet.publicKey,
-  //     new BN(10e8)
-  //   )
-
-  //   console.log("transferToken", transferToken)
+    })
 
       
-  // })
+
+    const extendInst =  AddressLookupTableProgram.extendLookupTable({
+      addresses: [testAccount1.publicKey, testAccount2.publicKey],
+      authority: defaultAccount.publicKey,
+      lookupTable: lookupTableAddress,
+      payer: defaultAccount.publicKey
+    })
+
     
+    const tx = new Transaction()
+    tx.add(lookupTableInst, extendInst)
+    const sx = await sendTransaction(connection , tx, [defaultAccount])
+    await printAddressLookupTable(connection, lookupTableAddress);
+
+    console.log(sx)
+    
+
+  })
+
+  // it()
+
+  
 });
+
+ 
+0
