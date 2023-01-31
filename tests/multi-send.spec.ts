@@ -32,7 +32,7 @@ describe("multi-send", () => {
   
   before(async () => {
     defaultAccount = await SolanaConfigService.getDefaultAccount()
-    for(let i = 0; i < 1; i++){
+    for(let i = 0; i < 5; i++){
       accounts.push(Keypair.generate().publicKey)
     }
   });
@@ -85,7 +85,6 @@ describe("multi-send", () => {
       connection,
       defaultAccount
     )
-    await delay(5)    
 
     const tokenInst = await createArrTransferInstruction(
       mintKey.publicKey,
