@@ -73,7 +73,7 @@ export async function sendTransactionV0WithLookupTable(
         .then((res) => res.value);
 
     let blockhash = await connection
-        .getLatestBlockhash()
+        .getLatestBlockhash("confirmed")
         .then((res) => res.blockhash);
     
     const messageV0 = new TransactionMessage({
@@ -101,7 +101,7 @@ export async function findOrCreateAtas(
             accounts[i],
             mint
         )
-        if(!SolanaService.isAddressInUse(connection,ata)) {
+        if(SolanaService.isAddressInUse(connection,ata)) {
             await TokenProgramService.createAssociatedTokenAccount(
                 connection,
                 payer,
@@ -127,7 +127,7 @@ export async function createArrTransferInstruction(
     )
     const instructions: TransactionInstruction[] = [];
     for(let i = 0; i < accounts.length; i++){
-        const tokenInst = await createTransferInstruction(
+        const tokenInst = createTransferInstruction(
             mint,
             accounts[i],
             sourceAta,

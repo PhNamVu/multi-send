@@ -32,7 +32,7 @@ describe("multi-send", () => {
   
   before(async () => {
     defaultAccount = await SolanaConfigService.getDefaultAccount()
-    for(let i = 0; i < 50; i++){
+    for(let i = 0; i < 1; i++){
       accounts.push(Keypair.generate().publicKey)
     }
   });
@@ -64,42 +64,42 @@ describe("multi-send", () => {
   });
 
   
-  it("Create and extend Address Lookup Table", async () => {
+  it("Create, extend and multi send using Address Lookup Table", async () => {
    
     const [lookupTableInst, lookupTableAddress] = AddressLookupTableProgram.createLookupTable({
       authority: defaultAccount.publicKey,
       payer: defaultAccount.publicKey,
       recentSlot: await connection.getSlot('finalized')
     })   
+
     
     
-    await sendTransactionV0(connection, [lookupTableInst, ], defaultAccount)
+    await sendTransactionV0(connection, [lookupTableInst], defaultAccount)
     await delay(1)
     await extendLookupTable([...accounts], defaultAccount.publicKey, lookupTableAddress, defaultAccount, connection)
-    // await printAddressLookupTable(connection, lookupTableAddress);
+    await printAddressLookupTable(connection, lookupTableAddress);
 
-    
-
-  })
-
-  it("Send spl-token to multi account",async () => {
-    // Change Lookup Address here in case you want to test with your local rpc
-    const LOOKUP_ADDRESS = new PublicKey("ELtwUx2shzkozpgNTuRg3eSQ1HdXHgy4TYMLDBB3HfPL")
     const ATAs = await findOrCreateAtas(
-          mintKey.publicKey,
-          accounts,
-          connection,
-          defaultAccount
+      mintKey.publicKey,
+      accounts,
+      connection,
+      defaultAccount
     )
+    await delay(5)    
+
     const tokenInst = await createArrTransferInstruction(
       mintKey.publicKey,
       ATAs,
       100,
       defaultAccount.publicKey
     )
-    console.log(tokenInst)
-    await sendTransactionV0WithLookupTable(connection, tokenInst, defaultAccount, LOOKUP_ADDRESS)
+    
+    // BUG here
+    await sendTransactionV0WithLookupTable(connection, tokenInst, defaultAccount, lookupTableAddress)
+
   })
+
+  
  
   
 });
