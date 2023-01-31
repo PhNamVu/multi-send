@@ -1,37 +1,40 @@
-import { sendTransaction, sendTransaction2, TokenProgramService } from '@coin98/solana-support-library';
+import { TokenProgramService } from '@coin98/solana-support-library';
 import {
-  SolanaConfigService, TestAccountService,
+  SolanaConfigService, 
 
 } from '@coin98/solana-support-library/config';
 
-import { createTransferInstruction } from '@solana/spl-token';
  
 
 import {
 
-  TransactionMessage, Connection, Keypair, AddressLookupTableProgram, Transaction, PublicKey
+   Connection, Keypair, AddressLookupTableProgram, PublicKey
 
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
-import { printAddressLookupTable, sendTransactionV0 } from './util';
+import { printAddressLookupTable, 
+  sendTransactionV0, 
+  extendLookupTable, delay, createArrTransferInstruction, findOrCreateAtas, sendTransactionV0WithLookupTable } from './util';
+
+
 
 describe("multi-send", () => {
-  // Configure the client to use the local cluster.
-  // anchor.setProvider(anchor.AnchorProvider.env());
+  const PROGRAM_ID = new PublicKey('CYtTx9XGqxEJSjxXvNz2ZYgC2J8brQGL5vj6uAi1ukQr')
   const connection = new Connection('http://localhost:8899', 'confirmed')
   let defaultAccount: Keypair;
-  let testAccount1: Keypair
-  let testAccount2: Keypair
+
 
   // Generate a random keypair that will represent our token
   const mintKey  = Keypair.generate();
+  let accounts: PublicKey[] = [];
 
    
   
   before(async () => {
     defaultAccount = await SolanaConfigService.getDefaultAccount()
-    testAccount1 = await TestAccountService.getAccount(0)
-    testAccount2 = await TestAccountService.getAccount(1)
+    for(let i = 0; i < 50; i++){
+      accounts.push(Keypair.generate().publicKey)
+    }
   });
  
   it("Mint token!", async () => {
@@ -55,43 +58,49 @@ describe("multi-send", () => {
       new BN(100e8)
     )
 
-    console.log("tokenMint:",tokenMint)
-    console.log("mintToken:",mintToken)
+    
   
     
   });
 
+  
   it("Create and extend Address Lookup Table", async () => {
    
     const [lookupTableInst, lookupTableAddress] = AddressLookupTableProgram.createLookupTable({
       authority: defaultAccount.publicKey,
       payer: defaultAccount.publicKey,
       recentSlot: await connection.getSlot('finalized')
-
-    })
-
-      
-
-    const extendInst =  AddressLookupTableProgram.extendLookupTable({
-      addresses: [testAccount1.publicKey, testAccount2.publicKey],
-      authority: defaultAccount.publicKey,
-      lookupTable: lookupTableAddress,
-      payer: defaultAccount.publicKey
-    })
-
+    })   
     
-    const tx = new Transaction()
-    tx.add(lookupTableInst, extendInst)
-    const sx = await sendTransaction(connection , tx, [defaultAccount])
-    await printAddressLookupTable(connection, lookupTableAddress);
+    
+    await sendTransactionV0(connection, [lookupTableInst, ], defaultAccount)
+    await delay(1)
+    await extendLookupTable([...accounts], defaultAccount.publicKey, lookupTableAddress, defaultAccount, connection)
+    // await printAddressLookupTable(connection, lookupTableAddress);
 
-    console.log(sx)
     
 
   })
 
-  // it()
-
+  it("Send spl-token to multi account",async () => {
+    // Change Lookup Address here in case you want to test with your local rpc
+    const LOOKUP_ADDRESS = new PublicKey("ELtwUx2shzkozpgNTuRg3eSQ1HdXHgy4TYMLDBB3HfPL")
+    const ATAs = await findOrCreateAtas(
+          mintKey.publicKey,
+          accounts,
+          connection,
+          defaultAccount
+    )
+    const tokenInst = await createArrTransferInstruction(
+      mintKey.publicKey,
+      ATAs,
+      100,
+      defaultAccount.publicKey
+    )
+    console.log(tokenInst)
+    await sendTransactionV0WithLookupTable(connection, tokenInst, defaultAccount, LOOKUP_ADDRESS)
+  })
+ 
   
 });
 
