@@ -17,15 +17,15 @@ pub mod multi_send {
         let recipients: &&[AccountInfo] = &ctx.remaining_accounts;
         let authority = &ctx.accounts.from_authority;
         for recipient in recipients {
-           transfer_token(
-                authority,
-                &ctx.accounts.from,
-                recipient,
-           )
+          transfer_token(
+            ctx.accounts.token_program.to_account_info(),
+            ctx.accounts.from.to_account_info(),
+            recipient.to_account_info(),
+            authority.to_account_info(),
+            amount,
+            &[],
+          )?;
         }
-        
-       
- 
         Ok(())
     }
 }
