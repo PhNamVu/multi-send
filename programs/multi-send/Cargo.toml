@@ -20,6 +20,9 @@ anchor-lang = "0.24.2"
 anchor-spl = "0.24.2"
 solana-program = "1.9.13"
 
+
+
 [dev-dependencies]
-spl-associated-token-account = { version = "~1.0.3",  features = ["no-entrypoint"] }
+solana-sdk = "~1.9.15"
+solana-cli-config = "1.9.5"
 spl-token = { version = "~3.2",  features = ["no-entrypoint"] }
