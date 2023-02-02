@@ -45,7 +45,7 @@ describe("multi-send", () => {
       connection,
       defaultAccount,
       mintKey,
-      1,
+      8,
       defaultAccount.publicKey,
       defaultAccount.publicKey
     )

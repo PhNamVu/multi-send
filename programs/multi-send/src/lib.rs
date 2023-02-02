@@ -1,31 +1,30 @@
-use anchor_lang::{prelude::*, accounts::program_account::ProgramAccount};
-use anchor_spl::token::{Token, Transfer};
+use anchor_lang::{prelude::*};
+use anchor_spl::token::{Token};
 
+use crate::external::anchor_spl_token::{
+    transfer_token
+  };
 declare_id!("CYtTx9XGqxEJSjxXvNz2ZYgC2J8brQGL5vj6uAi1ukQr");
 
 #[program]
 pub mod multi_send {
     use super::*;
 
-    pub fn transfer_token(ctx: Context<TransferToken>, amount: u64)-> Result<()> {
+    pub fn transfer_token<'a>(
+        ctx: Context<'_, '_, '_, 'a, TransferToken<'a>>,
+        amount: u64)-> Result<()> {
         
-        let instructions = vec![];
-        let recipients = ctx.accounts.recipients;
+        let recipients: &&[AccountInfo] = &ctx.remaining_accounts;
+        let authority = &ctx.accounts.from_authority;
         for recipient in recipients {
-            // Create the Transfer struct for our context
-            let transfer_instruction = Transfer{
-                from: ctx.accounts.from.to_account_info(),
-                to: recipient.to_account_info(),
-                authority: ctx.accounts.from_authority.to_account_info(),
-            };
-            instructions.push(transfer_instruction);
-            
+           transfer_token(
+                authority,
+                &ctx.accounts.from,
+                recipient,
+           )
         }
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-            // Create the Context for our Transfer request
-        let cpi_ctx = CpiContext::new(cpi_program, instructions);
-        // Execute anchor's helper function to transfer tokens
-        anchor_spl::token::transfer(cpi_ctx , amount)?;
+        
+       
  
         Ok(())
     }
@@ -37,14 +36,6 @@ pub struct TransferToken<'info> {
     /// CHECK: The associated token account that we are transferring the token from
     #[account(mut)]
     pub from: UncheckedAccount<'info>,
-    /// CHECK: The associated token account that we are transferring the token to
-    #[account(mut)]
-    pub recipients: ,
     // the authority of the from account 
     pub from_authority: Signer<'info>,
-}
-
-#[account]
-pub struct Recipient {
-    pub recipient: Pubkey,
 }
