@@ -73,7 +73,7 @@ export async function sendTransactionV0WithLookupTable(
         .then((res) => res.value);
 
     let blockhash = await connection
-        .getLatestBlockhash("confirmed")
+        .getLatestBlockhash()
         .then((res) => res.blockhash);
     
     const messageV0 = new TransactionMessage({
@@ -121,16 +121,17 @@ export async function createArrTransferInstruction(
     amount: number,
     payer: PublicKey,
 ): Promise<TransactionInstruction[]> {
-    const sourceAta = await TokenProgramService.findAssociatedTokenAddress(
+    const sourceAta = TokenProgramService.findAssociatedTokenAddress(
         payer,
         mint
     )
+    console.log("source ata",sourceAta)
     const instructions: TransactionInstruction[] = [];
     for(let i = 0; i < accounts.length; i++){
         const tokenInst = createTransferInstruction(
-            mint,
-            accounts[i],
             sourceAta,
+            accounts[i],
+            mint,
             amount
         )
         instructions.push(tokenInst)

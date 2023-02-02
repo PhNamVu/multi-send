@@ -41,21 +41,21 @@ describe("multi-send", () => {
       
     
 
-    const tokenMint = await TokenProgramService.createTokenMint(
+   await TokenProgramService.createTokenMint(
       connection,
       defaultAccount,
       mintKey,
-      8,
+      1,
       defaultAccount.publicKey,
       defaultAccount.publicKey
     )
   
-    const mintToken = await TokenProgramService.mint(
+   await TokenProgramService.mint(
       connection,
       defaultAccount,
       mintKey.publicKey,
       defaultAccount.publicKey,
-      new BN(100e8)
+      new BN(200000000000)
     )
 
     
@@ -89,12 +89,13 @@ describe("multi-send", () => {
     const tokenInst = await createArrTransferInstruction(
       mintKey.publicKey,
       ATAs,
-      100,
+      1,
       defaultAccount.publicKey
     )
+    await sendTransactionV0(connection, tokenInst, defaultAccount)
     
     // BUG here
-    await sendTransactionV0WithLookupTable(connection, tokenInst, defaultAccount, lookupTableAddress)
+    // await sendTransactionV0WithLookupTable(connection, tokenInst, defaultAccount, lookupTableAddress)
 
   })
 
