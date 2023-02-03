@@ -19,9 +19,9 @@ pub struct TransferTokenParams {
 }
 
 pub fn transfer_token<'a>(
-  owner: &AccountInfo<'a>,
-  from_pubkey: &AccountInfo<'a>,
-  to_pubkey: &AccountInfo<'a>,
+  owner: &AccountInfo<'a>, //address wallet
+  from_pubkey: &AccountInfo<'a>, // ata from
+  to_pubkey: &AccountInfo<'a>, // ata to
   amount: u64,
   signer_seeds: &[&[&[u8]]],
 ) -> std::result::Result<(), ProgramError> {

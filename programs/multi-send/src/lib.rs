@@ -16,16 +16,16 @@ pub mod multi_send {
         ctx: Context<'_, '_, '_, 'a, TransferToken<'a>>,
         amount: u64)-> Result<()> {
 
-        let recipients: &&[AccountInfo] = &ctx.remaining_accounts;
+        let recipients = &ctx.remaining_accounts;
         let authority = &ctx.accounts.from_authority;
-        for recipient in recipients {
+        
+        for i in 0..recipients.len() {
           transfer_token(
-            ctx.accounts.token_program.to_account_info(),
-            ctx.accounts.from.to_account_info(),
-            recipient.to_account_info(),
-            authority.to_account_info(),
-            amount,
-            &[],
+              authority,
+              &ctx.accounts.from,
+              &recipients[i],
+              amount,
+              &[],
           )?;
         }
         Ok(())
