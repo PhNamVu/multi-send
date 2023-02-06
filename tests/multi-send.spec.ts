@@ -30,7 +30,7 @@ describe("multi-send", () => {
   
   before(async () => {
     defaultAccount = await SolanaConfigService.getDefaultAccount()
-    for(let i = 0; i < 5; i++){
+    for(let i = 0; i < 26; i++){
       accounts.push(Keypair.generate().publicKey)
     }
   });
