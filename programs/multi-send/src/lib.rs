@@ -1,10 +1,8 @@
 pub mod external;
 
-use anchor_lang::{prelude::*};
+use anchor_lang::prelude::*;
 
-use crate::external::anchor_spl_token::{
-    transfer_token
-};
+use crate::external::anchor_spl_token::transfer_token;
 declare_id!("48q3G4p5qwXNuDoLmdiZxUyTZ1nqfwNwM4QFRzDFjqAd");
 
 #[program]
@@ -13,19 +11,13 @@ pub mod multi_send {
 
     pub fn multi_send<'a>(
         ctx: Context<'_, '_, '_, 'a, TransferToken<'a>>,
-        amount: u64)-> Result<()> {
-
+        amount: u64,
+    ) -> Result<()> {
         let recipients = &ctx.remaining_accounts;
         let authority = &ctx.accounts.from_authority;
-        
+
         for i in 0..recipients.len() {
-          transfer_token(
-              authority,
-              &ctx.accounts.from,
-              &recipients[i],
-              amount,
-              &[],
-          )?;
+            transfer_token(authority, &ctx.accounts.from, &recipients[i], amount, &[])?;
         }
         Ok(())
     }
