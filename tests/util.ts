@@ -12,7 +12,7 @@ import {
 import {
     TOKEN_PROGRAM_ID
   } from '@coin98/solana-support-library'
-import { createTransferInstruction } from '@solana/spl-token';
+import colors from 'colors'
 import { TokenProgramService, SolanaService } from '@coin98/solana-support-library';
 
 import { BN, BorshCoder, Idl } from '@project-serum/anchor'
@@ -42,7 +42,7 @@ export async function sendTransactionV0(
     tx.sign([payer]);
     const sx = await connection.sendTransaction(tx);
 
-    console.log(`** -- Signature: ${sx}`);
+    console.log(colors.cyan('** -- Signature:'),sx);
 }
 
 export async function extendLookupTable(
@@ -53,7 +53,7 @@ export async function extendLookupTable(
     connection: Connection
   ): Promise<void> {
     if(addresses.length < 1) {
-        console.log("Lookup table is empty")
+        console.log(colors.yellow("\n Lookup table is empty"))
     }
     for (let i=0; i<addresses.length/30; i++) {
       const adds = [...addresses].splice(i*30,(i+1)*30)
@@ -96,7 +96,7 @@ export async function sendTransactionV0WithLookupTable(
     tx.sign([payer]);
     const sx = await connection.sendTransaction(tx);
     
-    console.log(`** -- Signature: ${sx}`);
+    console.log(colors.green(`✅ Multi Send Signature:`), sx);
 }
 
 export async function findOrCreateAtas(
@@ -106,6 +106,8 @@ export async function findOrCreateAtas(
     payer: Keypair
 ): Promise<PublicKey[]> {
     const atas: PublicKey[] = [];
+    console.log(colors.magenta.italic(`\nFinding and creating Associated Token Accounts  \n`));
+
     for(let i = 0; i < accounts.length; i++){
         const ata = TokenProgramService.findAssociatedTokenAddress(
             accounts[i],
@@ -174,30 +176,12 @@ export async function printAddressLookupTable(
     const lookupTableAccount = await connection
         .getAddressLookupTable(lookupTablePubkey)
         .then((res) => res.value);
-    console.log(`Lookup Table: ${lookupTablePubkey}`);
+    console.log(colors.cyan(`\nLookup Table Address:`), `${lookupTablePubkey} \n`);
     for (let i = 0; i < lookupTableAccount.state.addresses.length; i++) {
         const address = lookupTableAccount.state.addresses[i];
-        console.log(`   Index: ${i}  Address: ${address.toBase58()}`);
+        console.log('Index', colors.green(i.toString()), 'Address', colors.green(address.toBase58()));
     }
 }
-
-
-export async function printBalances(
-    connection: Connection,
-    timeframe: string,
-    pubkeyOne: PublicKey,
-    pubkeyTwo: PublicKey,
-): Promise<void> {
-
-    console.log(`${timeframe}:`);
-    console.log(`   Test Account #1 balance : ${
-        await connection.getBalance(pubkeyOne)
-    }`);
-    console.log(`   Test Account #2 balance : ${
-        await connection.getBalance(pubkeyTwo)
-    }`);
-}
-
 
 export function delay(s: number) {
     return new Promise( resolve => setTimeout(resolve, s * 1000) );

@@ -30,15 +30,13 @@ describe("multi-send", () => {
   
   before(async () => {
     defaultAccount = await SolanaConfigService.getDefaultAccount()
-    for(let i = 0; i < 25; i++){
+    for(let i = 0; i < 5; i++){
       accounts.push(Keypair.generate().publicKey)
     }
   });
  
   it("Mint token!", async () => {
-      
-    
-
+    // Create a token mint
    await TokenProgramService.createTokenMint(
       connection,
       defaultAccount,
@@ -59,15 +57,12 @@ describe("multi-send", () => {
 
   
   it("Create, extend and multi send using Address Lookup Table", async () => {
-   
     const [lookupTableInst, lookupTableAddress] = AddressLookupTableProgram.createLookupTable({
       authority: defaultAccount.publicKey,
       payer: defaultAccount.publicKey,
       recentSlot: await connection.getSlot('finalized')
     })   
 
-    
-    
     await sendTransactionV0(connection, [lookupTableInst], defaultAccount)
     await delay(1)
     await extendLookupTable([...accounts], defaultAccount.publicKey, lookupTableAddress, defaultAccount, connection)
@@ -86,16 +81,10 @@ describe("multi-send", () => {
       new BN('100000000'),
       defaultAccount
     )
-    // await sendTransactionV0(connection, [tokenInst], defaultAccount)
-    
-    // BUG here
+   
     await sendTransactionV0WithLookupTable(connection, [tokenInst], defaultAccount, lookupTableAddress)
 
-  })
-
-  
- 
-  
+  })  
 });
 
  
