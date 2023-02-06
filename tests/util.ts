@@ -1,4 +1,5 @@
 import {
+    AccountMeta,
     Connection,
     Keypair,
     PublicKey,
@@ -8,8 +9,17 @@ import {
     AddressLookupTableProgram,
 } from '@solana/web3.js';
 
+import {
+    TOKEN_PROGRAM_ID
+  } from '@coin98/solana-support-library'
 import { createTransferInstruction } from '@solana/spl-token';
 import { TokenProgramService, SolanaService } from '@coin98/solana-support-library';
+
+import { BN, BorshCoder, Idl } from '@project-serum/anchor'
+
+import  MultiSend  from '../target/idl/multi_send.json'
+
+const coder = new BorshCoder(MultiSend as Idl) 
 
 
 export async function sendTransactionV0(
@@ -118,25 +128,40 @@ export async function findOrCreateAtas(
 export async function createArrTransferInstruction(
     mint: PublicKey,
     accounts: PublicKey[],
-    amount: number,
-    payer: PublicKey,
-): Promise<TransactionInstruction[]> {
+    amount: BN,
+    payer: Keypair,
+): Promise<TransactionInstruction> {
+    let extraAccounts: AccountMeta[] = []
+
     const sourceAta = TokenProgramService.findAssociatedTokenAddress(
-        payer,
+        payer.publicKey,
         mint
     )
-    console.log("source ata",sourceAta)
-    const instructions: TransactionInstruction[] = [];
-    for(let i = 0; i < accounts.length; i++){
-        const tokenInst = createTransferInstruction(
-            sourceAta,
-            accounts[i],
-            mint,
-            amount
-        )
-        instructions.push(tokenInst)
+
+    const data = coder.instruction.encode('multi_send', {
+        amount,
+        accounts,
+    })
+
+    for (let i = 0; i < accounts.length; i++) {
+            extraAccounts.push(
+                <AccountMeta>{ pubkey: accounts[i], isSigner: false, isWritable: true },
+            )
+       
     }
-    return instructions;
+
+    const keys: AccountMeta[] = [
+        <AccountMeta>{ pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+        <AccountMeta>{ pubkey: sourceAta, isSigner: false, isWritable: true },
+        <AccountMeta>{ pubkey: payer.publicKey, isSigner: true, isWritable: false },
+        ...extraAccounts
+    ]   
+    return new TransactionInstruction({
+        data,
+        keys,
+        programId: new PublicKey('48q3G4p5qwXNuDoLmdiZxUyTZ1nqfwNwM4QFRzDFjqAd'),
+    })
+   
 }
 
 

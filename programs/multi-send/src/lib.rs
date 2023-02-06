@@ -1,18 +1,17 @@
 pub mod external;
 
 use anchor_lang::{prelude::*};
-use anchor_spl::token::{Token};
 
 use crate::external::anchor_spl_token::{
     transfer_token
 };
-declare_id!("CYtTx9XGqxEJSjxXvNz2ZYgC2J8brQGL5vj6uAi1ukQr");
+declare_id!("48q3G4p5qwXNuDoLmdiZxUyTZ1nqfwNwM4QFRzDFjqAd");
 
 #[program]
 pub mod multi_send {
     use super::*;
 
-    pub fn multisend<'a>(
+    pub fn multi_send<'a>(
         ctx: Context<'_, '_, '_, 'a, TransferToken<'a>>,
         amount: u64)-> Result<()> {
 
@@ -34,7 +33,8 @@ pub mod multi_send {
 
 #[derive(Accounts)]
 pub struct TransferToken<'info> {
-    pub token_program: Program<'info, Token>,
+    /// CHECK: Program account that holds the token program id
+    pub token_program: AccountInfo<'info>,
     /// CHECK: The associated token account that we are transferring the token from
     #[account(mut)]
     pub from: UncheckedAccount<'info>,

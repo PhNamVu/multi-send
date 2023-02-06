@@ -4,22 +4,20 @@ import {
 
 } from '@coin98/solana-support-library/config';
 
- 
-
 import {
 
    Connection, Keypair, AddressLookupTableProgram, PublicKey
 
 } from '@solana/web3.js';
-import { BN } from 'bn.js';
 import { printAddressLookupTable, 
   sendTransactionV0, 
-  extendLookupTable, delay, createArrTransferInstruction, findOrCreateAtas, sendTransactionV0WithLookupTable } from './util';
+  extendLookupTable, delay, findOrCreateAtas, sendTransactionV0WithLookupTable, createArrTransferInstruction } from './util';
+
+  import { BN } from 'bn.js';
 
 
 
 describe("multi-send", () => {
-  const PROGRAM_ID = new PublicKey('CYtTx9XGqxEJSjxXvNz2ZYgC2J8brQGL5vj6uAi1ukQr')
   const connection = new Connection('http://localhost:8899', 'confirmed')
   let defaultAccount: Keypair;
 
@@ -32,7 +30,7 @@ describe("multi-send", () => {
   
   before(async () => {
     defaultAccount = await SolanaConfigService.getDefaultAccount()
-    for(let i = 0; i < 5; i++){
+    for(let i = 0; i < 25; i++){
       accounts.push(Keypair.generate().publicKey)
     }
   });
@@ -56,11 +54,7 @@ describe("multi-send", () => {
       mintKey.publicKey,
       defaultAccount.publicKey,
       new BN(200000000000)
-    )
-
-    
-  
-    
+   )  
   });
 
   
@@ -89,13 +83,13 @@ describe("multi-send", () => {
     const tokenInst = await createArrTransferInstruction(
       mintKey.publicKey,
       ATAs,
-      1,
-      defaultAccount.publicKey
+      new BN('100000000'),
+      defaultAccount
     )
-    await sendTransactionV0(connection, tokenInst, defaultAccount)
+    // await sendTransactionV0(connection, [tokenInst], defaultAccount)
     
     // BUG here
-    // await sendTransactionV0WithLookupTable(connection, tokenInst, defaultAccount, lookupTableAddress)
+    await sendTransactionV0WithLookupTable(connection, [tokenInst], defaultAccount, lookupTableAddress)
 
   })
 
