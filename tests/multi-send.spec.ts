@@ -95,5 +95,3 @@ describe("multi-send", () => {
     );
   });
 });
-
-0;
