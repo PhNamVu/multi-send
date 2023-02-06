@@ -1,11 +1,9 @@
-# SOLANA Transaction V0 & ADDRESS LOOKUP TABLE 
+# Solana Transaction V0 & Address Lookup Table
 
 Solana Transaction v0: Solana is a high-performance blockchain platform that enables the development and deployment of decentralized applications. A transaction in Solana is a record of a transfer of value or data from one address to another on the Solana network. The Solana Transaction v0 is the first version of Solana transactions and the most basic form of transaction in the Solana blockchain.
 
 Address Lookup Table: The address lookup table (ALT) is a data structure in Solana that allows for efficient mapping of public keys to account addresses. It is used to reduce the size of transaction data, enabling more efficient storage and transmission of information on the Solana network. By using the ALT, nodes on the Solana network can quickly look up the address of an account based on its public key, which is necessary for processing transactions. The ALT is a key component of the Solana blockchain, contributing to its high performance and scalability.
 
-
-For more information see the [SPL documentation](https://spl.solana.com) and the [Token TypeDocs](https://solana-labs.github.io/solana-program-library/token/js/).
 
 
 ## Development
