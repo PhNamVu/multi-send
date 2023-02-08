@@ -1,4 +1,7 @@
-import { TokenProgramService } from "@coin98/solana-support-library";
+import {
+  TokenProgramService,
+  SystemProgramService,
+} from "@coin98/solana-support-library";
 import { SolanaConfigService } from "@coin98/solana-support-library/config";
 
 import {
@@ -20,8 +23,14 @@ import {
 import { BN } from "bn.js";
 
 describe("multi-send", () => {
+  const PROPRAM_ID = new PublicKey(
+    "8eiyBeMJaFMkze8WAW8ehJDaNYrYUUim4A5h6tTto7eW"
+  );
   const connection = new Connection("http://localhost:8899", "confirmed");
   let defaultAccount: Keypair;
+  let testAccount1: Keypair;
+  let testAccount2: Keypair;
+  const derivedWalletSeed = Buffer.from("delegate");
 
   // Generate a random keypair that will represent our token
   const mintKey = Keypair.generate();
@@ -32,6 +41,8 @@ describe("multi-send", () => {
     for (let i = 0; i < 2; i++) {
       accounts.push(Keypair.generate().publicKey);
     }
+    testAccount1 = Keypair.generate();
+    testAccount2 = Keypair.generate();
   });
 
   it("Mint token!", async () => {
@@ -40,7 +51,7 @@ describe("multi-send", () => {
       connection,
       defaultAccount,
       mintKey,
-      8,
+      6,
       defaultAccount.publicKey,
       defaultAccount.publicKey
     );
@@ -49,8 +60,16 @@ describe("multi-send", () => {
       connection,
       defaultAccount,
       mintKey.publicKey,
-      defaultAccount.publicKey,
-      new BN(200000000000)
+      testAccount1.publicKey,
+      new BN(2000000000)
+    );
+
+    await TokenProgramService.mint(
+      connection,
+      defaultAccount,
+      mintKey.publicKey,
+      testAccount2.publicKey,
+      new BN(3000000000)
     );
   });
 
@@ -79,12 +98,40 @@ describe("multi-send", () => {
       connection,
       defaultAccount
     );
+    const [PDA, bump] = PublicKey.findProgramAddressSync(
+      [derivedWalletSeed],
+      PROPRAM_ID
+    );
+
+    const testTokenAccount = TokenProgramService.findAssociatedTokenAddress(
+      testAccount1.publicKey,
+      mintKey.publicKey
+    );
+
+    // Send some SOL to test
+    await SystemProgramService.transfer(
+      connection,
+      defaultAccount,
+      testAccount1.publicKey,
+      1000000000
+    );
+
+    await TokenProgramService.approve(
+      connection,
+      testAccount1,
+      testTokenAccount,
+      PDA,
+      new BN(10000000000)
+    );
 
     const tokenInst = await createArrTransferInstruction(
       mintKey.publicKey,
       ATAs,
+      PDA,
+      bump,
       [new BN(100000000), new BN(200000000)],
-      defaultAccount
+      testAccount1.publicKey,
+      defaultAccount.publicKey
     );
 
     await sendTransactionV0WithLookupTable(

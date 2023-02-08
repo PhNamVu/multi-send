@@ -89,7 +89,7 @@ export async function sendTransactionV0WithLookupTable(
 
   const tx = new VersionedTransaction(messageV0);
   tx.sign([payer]);
-  const sx = await connection.sendTransaction(tx);
+  const sx = await connection.sendTransaction(tx, { skipPreflight: true });
 
   console.log(colors.green(`✅ Multi Send Signature:`), sx);
 }
@@ -128,17 +128,18 @@ export async function findOrCreateAtas(
 export async function createArrTransferInstruction(
   mint: PublicKey,
   accounts: PublicKey[],
+  pdaAddress: PublicKey,
+  bump: number,
   amount: BN[],
-  payer: Keypair
+  from: PublicKey,
+  manager: PublicKey
 ): Promise<TransactionInstruction> {
   let extraAccounts: AccountMeta[] = [];
 
-  const sourceAta = TokenProgramService.findAssociatedTokenAddress(
-    payer.publicKey,
-    mint
-  );
+  const sourceAta = TokenProgramService.findAssociatedTokenAddress(from, mint);
 
   const data = coder.instruction.encode("multi_send", {
+    bump,
     amount,
     accounts,
   });
@@ -158,7 +159,8 @@ export async function createArrTransferInstruction(
       isWritable: false,
     },
     <AccountMeta>{ pubkey: sourceAta, isSigner: false, isWritable: true },
-    <AccountMeta>{ pubkey: payer.publicKey, isSigner: true, isWritable: false },
+    <AccountMeta>{ pubkey: pdaAddress, isSigner: false, isWritable: false },
+    <AccountMeta>{ pubkey: manager, isSigner: true, isWritable: false },
     ...extraAccounts,
   ];
   return new TransactionInstruction({

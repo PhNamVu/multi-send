@@ -10,20 +10,22 @@ pub mod multi_send {
     use super::*;
 
     pub fn multi_send<'a>(
-        ctx: Context<'_, '_, '_, 'a, TransferToken<'a>>, // remaining_accounts: &[AccountInfo<'a>]
+        ctx: Context<'_, '_, '_, 'a, TransferDelegate<'a>>, // remaining_accounts: &[AccountInfo<'a>]
+        bump: u8,
         amount: Vec<u64>,
     ) -> Result<()> {
         let recipients = &ctx.remaining_accounts;
-        let authority = &ctx.accounts.from_authority;
-        
+        let authority = &ctx.accounts.contract_signer;
+
         require!(recipients.len() == amount.len(), InvalidInput);
         for i in 0..recipients.len() {
+            let seeds = &[b"delegate".as_ref(), &[bump]];
             transfer_token(
-                authority,
-                &ctx.accounts.from,
+                authority,          // approved PDA
+                &ctx.accounts.from, // ata from
                 &recipients[i],
                 amount[i],
-                &[],
+                &[seeds],
             )?;
         }
         Ok(())
@@ -31,12 +33,21 @@ pub mod multi_send {
 }
 
 #[derive(Accounts)]
-pub struct TransferToken<'info> {
+#[instruction(bump: u8)]
+pub struct TransferDelegate<'info> {
     /// CHECK: Program account that holds the token program id
     pub token_program: AccountInfo<'info>,
     /// CHECK: The associated token account that we are transferring the token from
     #[account(mut)]
-    pub from: UncheckedAccount<'info>,
-    // the authority of the from account
-    pub from_authority: Signer<'info>,
+    pub from: UncheckedAccount<'info>, // ata
+    /// CHECK:
+    #[account(
+        seeds = [
+            b"delegate".as_ref(),
+        ],
+        bump = bump,
+    )]
+    pub contract_signer: UncheckedAccount<'info>,
+
+    pub manager: Signer<'info>,
 }
