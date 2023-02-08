@@ -29,7 +29,7 @@ describe("multi-send", () => {
 
   before(async () => {
     defaultAccount = await SolanaConfigService.getDefaultAccount();
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < 2; i++) {
       accounts.push(Keypair.generate().publicKey);
     }
   });
@@ -83,7 +83,7 @@ describe("multi-send", () => {
     const tokenInst = await createArrTransferInstruction(
       mintKey.publicKey,
       ATAs,
-      new BN("100000000"),
+      [new BN(100000000), new BN(200000000)],
       defaultAccount
     );
 

@@ -128,7 +128,7 @@ export async function findOrCreateAtas(
 export async function createArrTransferInstruction(
   mint: PublicKey,
   accounts: PublicKey[],
-  amount: BN,
+  amount: BN[],
   payer: Keypair
 ): Promise<TransactionInstruction> {
   let extraAccounts: AccountMeta[] = [];
@@ -164,7 +164,7 @@ export async function createArrTransferInstruction(
   return new TransactionInstruction({
     data,
     keys,
-    programId: new PublicKey("48q3G4p5qwXNuDoLmdiZxUyTZ1nqfwNwM4QFRzDFjqAd"),
+    programId: new PublicKey("8eiyBeMJaFMkze8WAW8ehJDaNYrYUUim4A5h6tTto7eW"),
   });
 }
 

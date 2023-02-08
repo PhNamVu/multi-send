@@ -2,7 +2,7 @@
 seeds = false
 skip-lint = false
 [programs.localnet]
-multi_send = "48q3G4p5qwXNuDoLmdiZxUyTZ1nqfwNwM4QFRzDFjqAd"
+multi_send = "8eiyBeMJaFMkze8WAW8ehJDaNYrYUUim4A5h6tTto7eW"
 
 [registry]
 url = "https://api.apr.dev"
