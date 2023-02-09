@@ -38,7 +38,7 @@ describe("multi-send", () => {
 
   before(async () => {
     defaultAccount = await SolanaConfigService.getDefaultAccount();
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 4; i++) {
       accounts.push(Keypair.generate().publicKey);
     }
     testAccount1 = Keypair.generate();
@@ -92,7 +92,7 @@ describe("multi-send", () => {
     );
     await printAddressLookupTable(connection, lookupTableAddress);
 
-    const ATAs = await findOrCreateAtas(
+    const toATAs = await findOrCreateAtas(
       mintKey.publicKey,
       accounts,
       connection,
@@ -103,8 +103,12 @@ describe("multi-send", () => {
       PROPRAM_ID
     );
 
-    const testTokenAccount = TokenProgramService.findAssociatedTokenAddress(
+    const fromTokenAccount1 = TokenProgramService.findAssociatedTokenAddress(
       testAccount1.publicKey,
+      mintKey.publicKey
+    );
+    const fromTokenAccount2 = TokenProgramService.findAssociatedTokenAddress(
+      testAccount2.publicKey,
       mintKey.publicKey
     );
 
@@ -116,21 +120,48 @@ describe("multi-send", () => {
       1000000000
     );
 
+    // Send some SOL to test
+    await SystemProgramService.transfer(
+      connection,
+      defaultAccount,
+      testAccount2.publicKey,
+      1000000000
+    );
+
     await TokenProgramService.approve(
       connection,
       testAccount1,
-      testTokenAccount,
+      fromTokenAccount1,
+      PDA,
+      new BN(10000000000)
+    );
+    await TokenProgramService.approve(
+      connection,
+      testAccount2,
+      fromTokenAccount2,
       PDA,
       new BN(10000000000)
     );
 
     const tokenInst = await createArrTransferInstruction(
-      mintKey.publicKey,
-      ATAs,
+      [
+        fromTokenAccount1,
+        toATAs[0],
+        fromTokenAccount2,
+        toATAs[1],
+        fromTokenAccount2,
+        toATAs[2],
+        fromTokenAccount1,
+        toATAs[3],
+      ],
       PDA,
       bump,
-      [new BN(100000000), new BN(200000000)],
-      testAccount1.publicKey,
+      [
+        new BN(100000000),
+        new BN(200000000),
+        new BN(100000000),
+        new BN(200000000),
+      ],
       defaultAccount.publicKey
     );
 

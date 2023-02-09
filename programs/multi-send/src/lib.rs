@@ -14,17 +14,17 @@ pub mod multi_send {
         bump: u8,
         amount: Vec<u64>,
     ) -> Result<()> {
-        let recipients = &ctx.remaining_accounts;
+        let accounts = &ctx.remaining_accounts;
         let authority = &ctx.accounts.contract_signer;
 
-        require!(recipients.len() == amount.len(), InvalidInput);
-        for i in 0..recipients.len() {
+        require!(is_even(accounts.len()), InvalidInput);
+        for i in (0..accounts.len()).step_by(2) {
             let seeds = &[b"delegate".as_ref(), &[bump]];
             transfer_token(
-                authority,          // approved PDA
-                &ctx.accounts.from, // ata from
-                &recipients[i],
-                amount[i],
+                authority,    // approved PDA
+                &accounts[i], // ata from
+                &accounts[i+1],
+                amount[i / 2],
                 &[seeds],
             )?;
         }
@@ -37,10 +37,7 @@ pub mod multi_send {
 pub struct TransferDelegate<'info> {
     /// CHECK: Program account that holds the token program id
     pub token_program: AccountInfo<'info>,
-    /// CHECK: The associated token account that we are transferring the token from
-    #[account(mut)]
-    pub from: UncheckedAccount<'info>, // ata
-    /// CHECK:
+    /// CHECK: The PDA that is the delegate
     #[account(
         seeds = [
             b"delegate".as_ref(),
@@ -48,6 +45,13 @@ pub struct TransferDelegate<'info> {
         bump = bump,
     )]
     pub contract_signer: UncheckedAccount<'info>,
-
     pub manager: Signer<'info>,
 }
+
+fn is_even(number: usize) -> bool {
+    if number % 2 == 0 {
+        return true;
+    }
+    false
+}
+
